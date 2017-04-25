@@ -1,0 +1,39 @@
+//-
+//- Copyright (c) Microsoft. All rights reserved.
+//- Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//-
+
+extends layout
+
+block content
+  //- Conditions for this page:
+    // - already linked
+
+  div.container
+
+    h1 Unlink #{user.github.username}?
+
+    if orgs && orgs.length && orgs.length > 0
+      p You are currently a member of the following #{config.companyName} organization#{orgs.length == 1 ? '' : 's'} on GitHub:
+      ul
+        each org in orgs
+          li= org.name
+
+      p Please carefully review this page. Removing your corporate association will remove you from all of the organizations listed above.
+      p.
+        <strong>Potential data loss warning:</strong> If you use private repos with your
+        project, and have changes in a private fork that have not yet been committed to the
+        upstream repo for the org, they will be lost when membership is removed.
+
+    p Please be very careful and review the following before deciding whether to "unlink" your GitHub account:
+
+    ul
+      li Your GitHub account #{user.github.username} will lose access to #{config.companyName} organizations
+      li Private forks of repos from these orgs, if any, will be removed by GitHub
+      li Work committed in a private fork of a #{config.companyName} org will be lost
+
+    form(method='post', action='/unlink')
+      p
+        input.btn.btn-lg.btn-danger(type='submit', value='Remove my corporate link')
+        | &nbsp; &nbsp; &nbsp;
+        a.btn.btn-lg.btn-default(href='/') Cancel

@@ -1,0 +1,26 @@
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# Client script
+bower_components/
+.sass-cache/
+
+# Static assets
+public/
+resources/scss/build.scss
+resources/less/build.less
+
+# OS X
+.DS_Store
+
+# Local scripts
+sync-*.js
+
+# Local development environment scripts
+app.yaml
+
+# Editors
+.vscode/

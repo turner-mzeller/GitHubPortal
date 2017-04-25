@@ -1,0 +1,37 @@
+//-
+//- Copyright (c) Microsoft. All rights reserved.
+//- Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//-
+
+extends layout
+
+block content
+  div.container#top(style='margin-top:60px')
+  div.container#content
+    div.row
+      div.col-md-10
+        if messageTitle
+          p
+            em= messageTitle
+
+        if message
+          h1= message
+        if messageDetails
+          p= messageDetails
+        if messageTiny
+          p
+            small= messageTiny
+        if messageOutput
+          p
+            pre= messageOutput
+
+        p
+          br
+          a.btn.btn-default(href='/')= buttonText || 'Home'
+
+        if config && config.corporate && config.corporate.portalAdministratorEmail
+          p.vertical-space
+            | &nbsp;
+          p.vertical-space
+            | If you have any questions, please ping &nbsp;
+            a.alert-link(href='mailto:' + config.corporate.portalAdministratorEmail)= config.corporate.portalAdministratorEmail

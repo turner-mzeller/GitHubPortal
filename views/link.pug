@@ -1,0 +1,78 @@
+//-
+//- Copyright (c) Microsoft. All rights reserved.
+//- Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//-
+
+extends layout
+
+block content
+  //- Conditions for this page:
+    // - not yet linked
+    // - authenticated with AAD
+
+  div.container
+    div.row
+      div.col-md-7.col-lg-7
+        h1 Link your accounts
+        p.lead.
+          Enable self-service open source management by linking
+          your corporate &amp; social coding accounts
+        table.table
+          thead
+            tr
+              th GitHub Username
+              th
+              th #{config.companyName} Directory
+          tbody
+            tr
+              - gitAlertClass = config.authentication.scheme == 'github' ? '' : 'alert-success'
+              - aadAlertClass = config.authentication.scheme == 'aad' ? '' : 'alert-success'
+              td(class=gitAlertClass)= user.github.username
+              td
+                div.text-center
+                  i.glyphicon.glyphicon-link
+              td(class=aadAlertClass)= user.azure.username
+        p By continuing, you agree:
+        ul
+          li My GitHub account is controlled by #{user.azure.username}
+          li My GitHub password is safe and secure
+          li I will enable two-factor authentication on my GitHub account
+        form(method='post')
+          p(style='margin-top:24px')
+            input.btn.btn-lg.btn-primary(type='submit', value='Link')
+            | &nbsp; &nbsp;
+            a.btn.btn-lg.btn-default(href='/signout') Cancel
+
+      div.col-md-5.col-lg-5
+        if user && user.github && user.github.id
+          .alert-gray.pad
+            if config && config.corporate && config.corporate.trainingResources
+              - var footres = config.corporate.trainingResources.footer
+              if footres
+                // These same resources appear on every single auth page footer, too.
+                h3 Open Source Resources
+                each categoryList, category in footres
+                  h5= category
+                  ul
+                    each item in categoryList
+                      li
+                        a(href=item.link, target='_new')
+                          = item.title + ' '
+                          i.glyphicon.glyphicon-share-alt
+
+        h3 Your onboarding progress
+        h5
+          | Sign in with GitHub &amp; #{config.companyName} IT&nbsp;
+          i.glyphicon.glyphicon-ok
+        h5.text-primary
+          | Link your identity
+        h5
+          | Join your first GitHub organization
+        h5
+          | Multifactor security checkup
+        h5
+          | Profile review
+        h5
+          | Publish your membership <em>(optional)</em>
+        h5
+          | Join a team <em>(optional)</em>

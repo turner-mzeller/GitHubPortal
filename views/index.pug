@@ -1,0 +1,197 @@
+//-
+//- Copyright (c) Microsoft. All rights reserved.
+//- Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//-
+
+extends layout
+
+block js_doc_ready
+  | try {
+  | if (initializeManageFilter !== undefined) { initializeManageFilter() }
+  | if (initializeMembershipFilter !== undefined) { initializeMembershipFilter() }
+  | } catch(ex) {};
+
+block content
+  div.container
+    if onboarding === true
+      h1.huge Hi.
+    else
+      h1
+        | Open Source Portal&nbsp;
+        small for GitHub
+    if accountInfo && onboarding !== true
+      div.container
+        div.row(style='margin-top:16px')
+          // linked membership
+          div.col-md-4.col-lg-4.col-sm-4
+            if accountInfo.isLinkedUser !== false
+              div.metro-box.ms-blue
+                a(href='/unlink')
+                  h3 Linked Identity
+                  p= config.companyName.toUpperCase()
+            else
+              div.metro-box.ms-light-gray
+                a(href='/link')
+                  h3 Not linked
+                  p= config.companyName.toUpperCase()
+          // 2-factor authentication
+          if accountInfo.twoFactorOff === true || accountInfo.twoFactorOn === true
+            div.col-md-4.col-lg-4.col-sm-4
+              if accountInfo.twoFactorOff === true
+                div.metro-box.ms-red
+                  a(href=activeOrgUrl + 'security-check')
+                    h3 2FA
+                    p OFF
+              else if accountInfo.twoFactorOn === true
+                div.metro-box.ms-green
+                  a(href=activeOrgUrl + 'security-check')
+                    h3 2-factor auth
+                    p PROTECTED
+        div.row(style='margin-top:16px')
+          div.col-md-4.col-lg-4.col-sm-4
+            if accountInfo.isLinkedUser !== false
+              p You've linked your GitHub and corporate identities.
+            else
+              p To join the organization, you need to <a href="/link">link your GitHub and Microsoft-related identities</a>.
+          div.col-md-4.col-lg-4.col-sm-4
+            if accountInfo.twoFactorOff === true || accountInfo.twoFactorOn === true
+              if accountInfo.twoFactorOff === true
+                p Your account is a security risk and is not in compliance. <strong>Your access may be revoked at any time, without notice, and may cause work stoppage or loss.</strong>
+              else if accountInfo.twoFactorOn === true
+                p Your account uses modern security. Thank you.
+
+    if accountInfo.organizations
+      if onboarding !== true
+        h1
+          a.a-unstyled(name='orgs') #{config.companyName} Organizations
+
+      if onboarding === true
+        h3 Please select the organization that you would like to join.
+
+      - var currentPriority = ''
+      each o in accountInfo.organizations
+        if o.setting('priority') !== currentPriority
+          - currentPriority = o.setting('priority')
+          if currentPriority == 'secondary'
+            h2 Additional Organizations
+            p Here are additional organizations that are managed by this portal but are intended for specific teams, projects and purposes.
+        div.link-box
+          a(href=o.baseUrl + (o.membershipStateTemporary === 'active' ? '' : 'join') + onboardingPostfixUrl)
+            h2
+              strong.capitalize= o.name + ' '
+              if o.membershipStateTemporary == 'active'
+                small Member
+              else if o.membershipStateTemporary == 'pending'
+                small
+                  span.label.label-danger Membership Pending
+              else
+                small
+                  if o.setting('locked')
+                    span.label.label-default Locked
+                  else
+                    span.label.label-primary Join this organization
+            p.lead= o.setting('description')
+
+      //-if accountInfo.isSudoer
+        h1 Organization Administration
+        p Your account is a delegate administrator for the organization. You have additional capabilities enabled to help ensure the health of the organization.
+        p
+          a.btn.btn-default(href='/organization') Organization Delegate Dashboard
+
+      if accountInfo.teamsMaintained && accountInfo.teamsMaintained.length && accountInfo.teamsMaintained.length > 0
+        if accountInfo.pendingApprovals && accountInfo.pendingApprovals.length && accountInfo.pendingApprovals.length > 0
+          h1 Approvals: Please Review
+          p
+            a.btn.btn-default(href='/approvals/') See all pending approvals (#{accountInfo.pendingApprovals.length})
+
+        if accountInfo.teamsMaintained
+          h1 Teams You Maintain
+          script(type='text/javascript').
+            function initializeManageFilter() {
+              var inputManageFilter = $('#manage-filter');
+              if (inputManageFilter) {
+                inputManageFilter.keyup(function () {;
+                  $.uiTableFilter($('table#manage-table'), this.value, ['Title', 'Organization', 'GitHub Name']);
+                });
+              }
+            }
+          div.container
+            table.table#manage-table
+              thead
+                tr
+                  th(colspan='2')
+                    form#manage-filter-form
+                      input.form-control#manage-filter(name='filter', placeholder='Filter teams I manage', type='text')
+                  th
+                    p
+                      i.glyphicon.glyphicon-search
+                tr
+                  th GitHub Name
+                  th Organization
+                  th Actions
+              tbody
+                each team in accountInfo.teamsMaintained
+                  tr
+                    td
+                      a.btn.btn-sm.btn-muted(href=team.org.baseUrl + 'teams/' + team.slug)= team.name
+                    td.twentypercent.capitalize= team.org.name
+                    td.thirtypercent
+                      p
+                        a.btn.btn-sm.btn-default(href=team.org.baseUrl + 'teams/' + team.slug) Manage Team + ' '
+                        a.btn.btn-default.btn-sm(href='https://github.com/orgs/' + team.org.name + '/teams/' + team.slug, target='_new')
+                          | Open on GitHub
+                          i.glyphicon.glyphicon-share-alt
+
+      if accountInfo.isLinkedUser && onboarding !== true
+        h1 Team Memberships
+        if accountInfo.teamsMaintainedHash
+          p Here are teams that you are a member of but not a maintainer of.
+        if accountInfo.userTeamMemberships && accountInfo.userTeamMemberships.length && accountInfo.userTeamMemberships.length > 0
+          script(type='text/javascript').
+            function initializeMembershipFilter() {
+              var inputMembershipFilter = $('#membership-filter');
+              if (inputMembershipFilter) {
+                inputMembershipFilter.keyup(function () {;
+                  $.uiTableFilter($('table#membership-table'), this.value, ['Team', 'Organization']);
+                });
+              }
+            }
+          table.table#membership-table
+            thead
+              tr
+                th(colspan='2')
+                  form#membership-filter-form
+                    input.form-control#membership-filter(name='filter', placeholder='Filter my teams', type='text')
+                th
+                  p
+                    i.glyphicon.glyphicon-search
+              tr
+                th Team
+                th Organization
+                th Actions
+            tbody
+              each team in accountInfo.userTeamMemberships
+                if team.id && accountInfo.teamsMaintainedHash && accountInfo.teamsMaintainedHash[team.id] !== undefined
+                  // Skipping this team since they are already maintaining it
+                else
+                  tr
+                    td
+                      a.capitalize.btn.btn-sm.btn-muted(href='https://github.com/orgs/' + team.org.name + '/teams/' + team.slug, target='_new')= team.name
+                    td.twentypercent.capitalize= team.org.name
+                    td.twentypercent
+                      p
+                        if config.github.teamEveryoneId == team.id
+                          a.btn.btn-default.btn-sm(href=team.org.baseUrl + '/leave') Leave Organization
+                        else
+                          a.btn.btn-default.btn-sm(href='https://github.com/orgs/' + team.org.name + '/teams/' + team.slug, target='_new')
+                            | Open on GitHub
+                            i.glyphicon.glyphicon-share-alt
+          //- The user will get a better experience joining teams if they go through the organization onboarding first.
+          //-p
+            a.btn.btn-default(href='/teams')= (accountInfo.userTeamMemberships && accountInfo.userTeamMemberships.length && accountInfo.userTeamMemberships.length > 0) ? 'Join another team' : 'Join a team'
+        else
+          p You are not currently a member of any GitHub teams that grant you permission to specific repositories. Note that this display is cached and may not be up-to-date.
+
+    hr
+    p
+      a.btn.btn-default(href='/unlink') Remove my corporate GitHub access
